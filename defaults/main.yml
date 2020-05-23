@@ -1,0 +1,9 @@
+---
+cfssl_user: cfssl
+cfssl_group: cfssl
+cfssl_log_dir: /var/log/cfssl
+cfssl_db_dir: "{{ __cfssl_db_dir }}"
+cfssl_service: cfssl
+cfssl_conf_dir: "{{ __cfssl_conf_dir }}"
+cfssl_conf_file: "{{ __cfssl_conf_dir }}/cfssl.conf"
+cfssl_flags: ""

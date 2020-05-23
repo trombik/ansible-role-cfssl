@@ -1,0 +1,37 @@
+---
+# tasks file for ansible-role-cfssl
+
+- include_vars: "{{ ansible_os_family }}.yml"
+
+- include: "install-{{ ansible_os_family }}.yml"
+
+- name: Create log directory
+  file:
+    path: "{{ cfssl_log_dir }}"
+    mode: 0755
+    owner: "{{ cfssl_user }}"
+    group: "{{ cfssl_group }}"
+    state: directory
+  notify: Restart cfssl
+
+- name: Create db directory
+  file:
+    path: "{{ cfssl_db_dir }}"
+    mode: 0755
+    owner: "{{ cfssl_user }}"
+    group: "{{ cfssl_group }}"
+    state: directory
+  notify: Restart cfssl
+
+- name: Create cfssl.conf
+  template:
+    src: cfssl.conf.j2
+    dest: "{{ cfssl_conf_file }}"
+    validate: echo %s
+  notify: Restart cfssl
+
+- name: Start cfssl
+  service:
+    name: "{{ cfssl_service }}"
+    enabled: true
+    state: started

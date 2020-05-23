@@ -1,0 +1,6 @@
+---
+
+- name: Install cfssl
+  pkgng:
+    name: cfssl
+    state: present

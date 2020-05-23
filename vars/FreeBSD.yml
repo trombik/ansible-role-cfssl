@@ -1,0 +1,3 @@
+---
+__cfssl_db_dir: /var/db/cfssl
+__cfssl_conf_dir: /usr/local/etc/cfssl
