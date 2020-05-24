@@ -34,6 +34,8 @@
     cmd: "cfssl genkey -initca {{ cfssl_csr_root_file }} | cfssljson -bare ca"
     chdir: "{{ cfssl_ca_root_dir }}"
     creates: "{{ cfssl_ca_root_dir }}/ca-key.pem"
+  become: yes
+  become_user: "{{ cfssl_user }}"
 
 - name: Ensure cfssl group can read CA root private key
   file:
@@ -60,3 +62,5 @@
     cmd: "cfssl gencert -config={{ cfssl_ca_config_file | quote }} -profile={{ item['profile'] | quote }} -ca={{ cfssl_ca_root_dir + '/ca.pem' | quote }} -ca-key={{ cfssl_ca_root_dir + '/ca-key.pem' | quote }} -hostname={{ item['SAN'] | join(',') | quote }} {{ cfssl_certs_dir + '/' + item['name'] | quote }} | cfssljson -bare {{ item['json']['CN'] | quote }}"
     creates: "{{ item['json']['CN'] }}-key.pem"
   with_items: "{{ cfssl_certs }}"
+  become: yes
+  become_user: "{{ cfssl_user }}"
