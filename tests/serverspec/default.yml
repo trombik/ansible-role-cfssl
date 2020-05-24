@@ -83,7 +83,7 @@
             - key encipherment
             - client auth
 
-    cfssl_csr_root_config:
+    cfssl_ca_csr_config:
       CN: Sensu Test CA
       key:
         algo: rsa
