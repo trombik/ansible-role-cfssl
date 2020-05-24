@@ -84,20 +84,45 @@ describe file ca_key_private do
   its(:content) { should match(/-----BEGIN (?:RSA )?PRIVATE KEY-----/) }
 end
 
-(backends + agents).each do |backend|
+backends.each do |backend|
   %w[-key.pem .csr .json .pem].each do |ext|
     describe file "#{certs_dir}/#{backend}.#{domain}#{ext}" do
       it { should exist }
       it { should be_file }
-      if ext == "-key.pem"
-        it { should be_mode 600 }
-      else
+      case ext
+      when "-key.pem"
+        it { should be_mode 660 }
+        it { should be_owned_by user }
+        it { should be_grouped_into group }
+      when ".json"
         it { should be_mode 644 }
-      end
-      if ext == ".json"
         it { should be_owned_by "root" }
         it { should be_grouped_into default_group }
       else
+        it { should be_mode 644 }
+        it { should be_owned_by user }
+        it { should be_grouped_into group }
+      end
+    end
+  end
+end
+
+agents.each do |agent|
+  %w[-key.pem .csr .json .pem].each do |ext|
+    describe file "#{certs_dir}/#{agent}.#{domain}#{ext}" do
+      it { should exist }
+      it { should be_file }
+      case ext
+      when "-key.pem"
+        it { should be_mode 660 }
+        it { should be_owned_by "nobody" }
+        it { should be_grouped_into group }
+      when ".json"
+        it { should be_mode 644 }
+        it { should be_owned_by "root" }
+        it { should be_grouped_into default_group }
+      else
+        it { should be_mode 644 }
         it { should be_owned_by user }
         it { should be_grouped_into group }
       end

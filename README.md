@@ -34,6 +34,7 @@ This is a list of dict. An element represents a CSR.
 | `SAN` | list of Subject Alternative Name | no |
 | `profile` | profile name to use when signing | yes |
 | `json` | content of request JSON file in YAML format | yes |
+| `owner` | Unix user name of owner of the private key file (default is `cfssl_user`) | no |
 
 ## Debian
 
