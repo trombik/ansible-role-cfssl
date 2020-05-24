@@ -64,3 +64,11 @@
   with_items: "{{ cfssl_certs }}"
   become: yes
   become_user: "{{ cfssl_user }}"
+
+- name: Ensure private key is owned by owner
+  file:
+    path: "{{ cfssl_certs_dir }}/{{ item['json']['CN'] }}-key.pem"
+    mode: "0660"
+    owner: "{{ item['owner'] | default(cfssl_user) }}"
+    group: "{{ cfssl_group }}"
+  with_items: "{{ cfssl_certs }}"
