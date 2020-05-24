@@ -9,6 +9,8 @@ default_group = "root"
 extra_packages = []
 
 case os[:family]
+when "ubuntu"
+  package = "golang-cfssl"
 when "freebsd"
   default_group = "wheel"
   ca_root_dir = "/usr/local/etc/ssl"
@@ -23,6 +25,10 @@ certs_dir = "#{ca_root_dir}/certs"
 backends = %w[backend-1 backend-2 backend-3]
 agents = %w[agent1]
 domain = "example.com"
+
+describe user(user) do
+  it { should exist }
+end
 
 extra_packages.each do |p|
   describe package p do
@@ -64,7 +70,7 @@ describe file ca_key_public do
   it { should exist }
   it { should be_file }
   it { should be_mode 644 }
-  it { should be_owned_by "root" }
+  it { should be_owned_by user }
   it { should be_grouped_into group }
   its(:content) { should match(/-----BEGIN CERTIFICATE-----/) }
 end
@@ -73,7 +79,7 @@ describe file ca_key_private do
   it { should exist }
   it { should be_file }
   it { should be_mode 640 }
-  it { should be_owned_by "root" }
+  it { should be_owned_by user }
   it { should be_grouped_into group }
   its(:content) { should match(/-----BEGIN (?:RSA )?PRIVATE KEY-----/) }
 end
@@ -88,10 +94,11 @@ end
       else
         it { should be_mode 644 }
       end
-      it { should be_owned_by "root" }
       if ext == ".json"
+        it { should be_owned_by "root" }
         it { should be_grouped_into default_group }
       else
+        it { should be_owned_by user }
         it { should be_grouped_into group }
       end
     end
