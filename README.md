@@ -17,7 +17,9 @@ None
 | `cfssl_extra_packages` | list of extra packages to install | `[]` |
 | `cfssl_ca_root_dir` | path to root CA directory | `{{ __cfssl_ca_root_dir }}` |
 | `cfssl_ca_csr_file` | path to CSR JSON file of the root CA | `{{ cfssl_ca_root_dir }}/ca.csr.json` |
+| `cfssl_ca_csr_config` | content of `cfssl_ca_csr_file` | `{}` |
 | `cfssl_ca_config_file` | path to `ca-config.json` | `{{ cfssl_ca_root_dir }}/ca-config.json` |
+| `cfssl_ca_config` | content of `cfssl_ca_config_file` | `{}` |
 | `cfssl_certs_dir` | path to directory to keep signed certificates | `{{ cfssl_ca_root_dir }}/certs` |
 | `cfssl_flags` | not yet used | `""` |
 | `cfssl_certs` | list of certificates to sign (see below) | `""` |
@@ -143,7 +145,7 @@ None
             - key encipherment
             - client auth
 
-    cfssl_csr_root_config:
+    cfssl_ca_csr_config:
       CN: Sensu Test CA
       key:
         algo: rsa
