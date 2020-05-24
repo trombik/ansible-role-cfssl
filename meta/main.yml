@@ -10,6 +10,9 @@ galaxy_info:
     - name: FreeBSD
       versions:
         - 12.1
+    - name: Ubuntu
+      versions:
+        - bionic
   galaxy_tags:
     - cfssl
     - ssl

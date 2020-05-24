@@ -1,0 +1,5 @@
+---
+__cfssl_user: cfssl
+__cfssl_group: cfssl
+__cfssl_package: golang-cfssl
+__cfssl_ca_root_dir: /etc/ssl

@@ -1,0 +1,19 @@
+---
+
+- name: Install cfssl_extra_packages
+  apt:
+    name: "{{ cfssl_extra_packages }}"
+
+- name: Install cfssl
+  apt:
+    name: "{{ cfssl_package }}"
+    state: present
+
+- name: Create cfssl_group
+  group:
+    name: "{{ cfssl_group }}"
+
+- name: Create cfssl_user
+  user:
+    name: "{{ cfssl_user }}"
+    group: "{{ cfssl_group }}"
