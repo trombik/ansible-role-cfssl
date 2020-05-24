@@ -16,7 +16,7 @@ None
 | `cfssl_package` | package name of `cfssl` | `{{ __cfssl_package }}` |
 | `cfssl_extra_packages` | list of extra packages to install | `[]` |
 | `cfssl_ca_root_dir` | path to root CA directory | `{{ __cfssl_ca_root_dir }}` |
-| `cfssl_csr_root_file` | path to CSR JSON file of the root CA | `{{ cfssl_ca_root_dir }}/ca.csr.json` |
+| `cfssl_ca_csr_file` | path to CSR JSON file of the root CA | `{{ cfssl_ca_root_dir }}/ca.csr.json` |
 | `cfssl_ca_config_file` | path to `ca-config.json` | `{{ cfssl_ca_root_dir }}/ca-config.json` |
 | `cfssl_certs_dir` | path to directory to keep signed certificates | `{{ cfssl_ca_root_dir }}/certs` |
 | `cfssl_flags` | not yet used | `""` |

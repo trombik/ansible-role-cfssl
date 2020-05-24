@@ -17,7 +17,7 @@ when "freebsd"
 end
 
 ca_config = "#{ca_root_dir}/ca-config.json"
-csr_root_config = "#{ca_root_dir}/ca.csr.json"
+csr_config = "#{ca_root_dir}/ca-csr.json"
 ca_key_private = "#{ca_root_dir}/ca-key.pem"
 ca_key_public = "#{ca_root_dir}/ca.pem"
 certs_dir = "#{ca_root_dir}/certs"
@@ -48,7 +48,7 @@ describe file ca_root_dir do
   it { should be_grouped_into group }
 end
 
-describe file(csr_root_config) do
+describe file(csr_config) do
   it { should exist }
   it { should be_file }
   it { should be_mode 644 }
