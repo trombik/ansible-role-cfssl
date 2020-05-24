@@ -1,6 +1,107 @@
 ---
 - hosts: localhost
   roles:
-    - ansible-role-cfssl
+    - role: trombik.freebsd_pkg_repo
+      when: ansible_os_family == 'FreeBSD'
+    - role: ansible-role-cfssl
   vars:
-    cfssl_config: ""
+    # this test case follows the same steps described at
+    # https://docs.sensu.io/sensu-go/latest/guides/generate-certificates/
+    cfssl_certs:
+      - name: agent1.example.com.json
+        # Subject Alternative Name, or SAN in short
+        SAN: []
+        profile: agent
+        json:
+          CN: agent1.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
+      - name: backend-1.example.com.json
+        SAN:
+          - localhost
+          - 127.0.0.1
+          - 10.0.0.1
+          - backend-1
+        profile: backend
+        json:
+          CN: backend-1.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
+      - name: backend-2.example.com.json
+        SAN:
+          - localhost
+          - 127.0.0.1
+          - 10.0.0.2
+          - backend-2
+        profile: backend
+        json:
+          CN: backend-2.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
+      - name: backend-3.example.com.json
+        SAN:
+          - localhost
+          - 127.0.0.1
+          - 10.0.0.3
+          - backend-3
+        profile: backend
+        json:
+          CN: backend-3.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
+    cfssl_ca_config:
+      signing:
+        default:
+          expiry: 17520h
+          usages:
+            - signing
+            - key encipherment
+            - client auth
+      profiles:
+        backend:
+          expiry: 4320h
+          usages:
+            - signing
+            - key encipherment
+            - server auth
+        agent:
+          expiry: 4320h
+          usages:
+            - signing
+            - key encipherment
+            - client auth
+
+    cfssl_csr_root_config:
+      CN: Sensu Test CA
+      key:
+        algo: rsa
+        size: 2048
+    # __________________________________________package
+    freebsd_pkg_repo:
+
+      # disable the default package repository
+      FreeBSD:
+        enabled: "false"
+        state: present
+
+      # enable my own package repository, where the latest package is
+      # available
+      FreeBSD_devel:
+        enabled: "true"
+        state: present
+        url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.', '') }}{{ansible_architecture}}-default-default/"
+        mirror_type: http
+        signature_type: none
+        priority: 100

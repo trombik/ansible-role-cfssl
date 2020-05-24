@@ -1,37 +1,62 @@
 ---
 # tasks file for ansible-role-cfssl
 
-- include_vars: "{{ ansible_os_family }}.yml"
+- name: "Include {{ ansible_os_family }}.yml"
+  include_vars: "{{ ansible_os_family }}.yml"
 
-- include: "install-{{ ansible_os_family }}.yml"
+- name: "Include install-{{ ansible_os_family }}.yml"
+  include: "install-{{ ansible_os_family }}.yml"
 
-- name: Create log directory
+- name: Create cfssl_ca_root_dir directory
   file:
-    path: "{{ cfssl_log_dir }}"
+    path: "{{ cfssl_ca_root_dir }}"
     mode: 0755
     owner: "{{ cfssl_user }}"
     group: "{{ cfssl_group }}"
     state: directory
-  notify: Restart cfssl
 
-- name: Create db directory
+- name: Create cfssl_certs_dir
   file:
-    path: "{{ cfssl_db_dir }}"
+    path: "{{ cfssl_certs_dir }}"
     mode: 0755
     owner: "{{ cfssl_user }}"
     group: "{{ cfssl_group }}"
     state: directory
-  notify: Restart cfssl
 
-- name: Create cfssl.conf
+- name: Create ca.csr.json
   template:
-    src: cfssl.conf.j2
-    dest: "{{ cfssl_conf_file }}"
-    validate: echo %s
-  notify: Restart cfssl
+    src: ca.csr.json.j2
+    dest: "{{ cfssl_csr_root_file }}"
+    # validate: echo %s
 
-- name: Start cfssl
-  service:
-    name: "{{ cfssl_service }}"
-    enabled: true
-    state: started
+- name: Create certificate for CA
+  shell:
+    cmd: "cfssl genkey -initca {{ cfssl_csr_root_file }} | cfssljson -bare ca"
+    chdir: "{{ cfssl_ca_root_dir }}"
+    creates: "{{ cfssl_ca_root_dir }}/ca-key.pem"
+
+- name: Ensure cfssl group can read CA root private key
+  file:
+    path: "{{ cfssl_ca_root_dir }}/ca-key.pem"
+    mode: "0640"
+    group: "{{ cfssl_group }}"
+
+- name: Create cfssl_ca_config_file
+  template:
+    src: ca-config.json.j2
+    dest: "{{ cfssl_ca_config_file }}"
+
+- name: Create json file for certs
+  template:
+    src: cert.json.j2
+    dest: "{{ cfssl_certs_dir }}/{{ item['name'] }}"
+    mode: "0644"
+  with_items: "{{ cfssl_certs }}"
+
+- name: Create certs
+  shell:
+  args:
+    chdir: "{{ cfssl_certs_dir }}"
+    cmd: "cfssl gencert -config={{ cfssl_ca_config_file | quote }} -profile={{ item['profile'] | quote }} -ca={{ cfssl_ca_root_dir + '/ca.pem' | quote }} -ca-key={{ cfssl_ca_root_dir + '/ca-key.pem' | quote }} -hostname={{ item['SAN'] | join(',') | quote }} {{ cfssl_certs_dir + '/' + item['name'] | quote }} | cfssljson -bare {{ item['json']['CN'] | quote }}"
+    creates: "{{ item['json']['CN'] }}-key.pem"
+  with_items: "{{ cfssl_certs }}"

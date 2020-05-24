@@ -1,3 +1,5 @@
 ---
-__cfssl_db_dir: /var/db/cfssl
-__cfssl_conf_dir: /usr/local/etc/cfssl
+__cfssl_user: cfssl
+__cfssl_group: cfssl
+__cfssl_package: security/cfssl
+__cfssl_ca_root_dir: /usr/local/etc/ssl
