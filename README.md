@@ -75,6 +75,7 @@ None
         # Subject Alternative Name, or SAN in short
         SAN: []
         profile: agent
+        owner: nobody
         json:
           CN: agent1.example.com
           hosts:
@@ -132,19 +133,19 @@ None
             - signing
             - key encipherment
             - client auth
-      profiles:
-        backend:
-          expiry: 4320h
-          usages:
-            - signing
-            - key encipherment
-            - server auth
-        agent:
-          expiry: 4320h
-          usages:
-            - signing
-            - key encipherment
-            - client auth
+        profiles:
+          backend:
+            expiry: 4320h
+            usages:
+              - signing
+              - key encipherment
+              - server auth
+          agent:
+            expiry: 4320h
+            usages:
+              - signing
+              - key encipherment
+              - client auth
 
     cfssl_ca_csr_config:
       CN: Sensu Test CA

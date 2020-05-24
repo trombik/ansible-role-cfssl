@@ -138,6 +138,8 @@ backends.each do |backend|
     its(:stdout) { should match(/RSA Public-Key: \(2048 bit\)/) }
     its(:stdout) { should match(/Signature Algorithm: sha256WithRSAEncryption/) }
     its(:stdout) { should match(/Subject: CN = #{Regexp.escape(backend)}\.#{Regexp.escape(domain)}/) }
+    its(:stdout) { should match(/TLS Web Server Authentication/) }
+    its(:stdout) { should_not match(/TLS Web Client Authentication/) }
     its(:stdout) { should match(/DNS:localhost, DNS:#{Regexp.escape(backend)}, IP Address:127\.0\.0\.1, IP Address:10\.0\.0\.[123]/) }
   end
 end
