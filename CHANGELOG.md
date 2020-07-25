@@ -1,3 +1,7 @@
+## Release 1.1.1
+
+* 7f4ad9f bugfix: update gems
+
 ## Release 1.1.0
 
 * ae14d63 bugfix: fix wrong indent at `profiles`
