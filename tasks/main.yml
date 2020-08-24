@@ -27,6 +27,7 @@
   template:
     src: ca.csr.json.j2
     dest: "{{ cfssl_ca_csr_file }}"
+    mode: "0644"
     # validate: echo %s
 
 - name: Create certificate for CA
