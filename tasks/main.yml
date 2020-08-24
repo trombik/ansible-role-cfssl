@@ -48,6 +48,7 @@
   template:
     src: ca-config.json.j2
     dest: "{{ cfssl_ca_config_file }}"
+    mode: "0644"
 
 - name: Create json file for certs
   template:
