@@ -1,3 +1,7 @@
+## Release 1.1.3
+
+* 296f665 bugfix: another missing mode
+
 ## Release 1.1.2
 
 * cf12d20 bugfix: always set mode in template
