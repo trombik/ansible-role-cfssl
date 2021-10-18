@@ -7,6 +7,12 @@ user    = "cfssl"
 group   = "cfssl"
 default_group = "root"
 extra_packages = []
+public_mode = case os[:family]
+              when "freebsd"
+                644
+              else
+                664
+              end
 
 case os[:family]
 when "ubuntu"
@@ -69,7 +75,7 @@ end
 describe file ca_key_public do
   it { should exist }
   it { should be_file }
-  it { should be_mode 644 }
+  it { should be_mode public_mode }
   it { should be_owned_by user }
   it { should be_grouped_into group }
   its(:content) { should match(/-----BEGIN CERTIFICATE-----/) }
@@ -98,8 +104,12 @@ backends.each do |backend|
         it { should be_mode 644 }
         it { should be_owned_by "root" }
         it { should be_grouped_into default_group }
-      else
+      when ".csr"
         it { should be_mode 644 }
+        it { should be_owned_by user }
+        it { should be_grouped_into group }
+      when ".pem"
+        it { should be_mode public_mode }
         it { should be_owned_by user }
         it { should be_grouped_into group }
       end
@@ -121,8 +131,12 @@ agents.each do |agent|
         it { should be_mode 644 }
         it { should be_owned_by "root" }
         it { should be_grouped_into default_group }
-      else
+      when ".csr"
         it { should be_mode 644 }
+        it { should be_owned_by user }
+        it { should be_grouped_into group }
+      when ".pem"
+        it { should be_mode public_mode }
         it { should be_owned_by user }
         it { should be_grouped_into group }
       end
