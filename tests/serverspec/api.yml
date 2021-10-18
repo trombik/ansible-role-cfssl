@@ -1,0 +1,188 @@
+---
+- hosts: localhost
+  roles:
+    - role: trombik.freebsd_pkg_repo
+      when: ansible_os_family == 'FreeBSD'
+    - role: ansible-role-cfssl
+  vars:
+    # steps to run the server and create certificate.
+    #
+    # run server:
+    # sudo -u cfssl cfssl serve -db-config /usr/local/etc/ssl/db.json -ca /usr/local/etc/ssl/ca.pem -ca-key /usr/local/etc/ssl/ca-key.pem -config /usr/local/etc/ssl/ca-config.json
+    #
+    # create client.config.json and client.csr.json:
+    # cat client.config.json
+    # {
+    #    "auth_keys" : {
+    #       "primary" : {
+    #          "type" : "standard",
+    #          "key" : "0123456789ABCDEF0123456789ABCDEF"
+    #       }
+    #    },
+    #    "signing" : {
+    #       "default" : {
+    #          "auth_remote" : {
+    #             "remote" : "cfssl_server",
+    #             "auth_key" : "primary"
+    #          }
+    #       }
+    #    },
+    #    "remotes" : {
+    #       "cfssl_server" : "localhost:8888"
+    #    }
+    # }
+    #
+    # cat client.csr.json
+    # {
+    #   "CN": "client_username",
+    #   "hosts": ["test.example.com"],
+    #   "key": {
+    #     "algo": "ecdsa",
+    #     "size": 256
+    #   },
+    #   "names": [
+    #     {
+    #       "C": "US",
+    #       "L": "San Francisco",
+    #       "OU": "Some location",
+    #       "ST": "CA"
+    #     }
+    #   ]
+    # }
+    #
+    # cfssl gencert -config client.config.json -profile client client.csr.json | cfssljson -bare my-client
+    #
+    # see the cert:
+    # openssl x509 -text -in my-client.pem
+
+    cfssl_db_migration_environment: production
+    cfssl_db_migration_config:
+      production:
+        driver: sqlite3
+        open: "{{ cfssl_db_sqlite_database_file }}"
+
+    cfssl_db_type: sqlite
+    os_cfssl_extra_packages:
+      FreeBSD: sqlite3
+      Debian: sqlite3
+    cfssl_extra_packages: "{{ os_cfssl_extra_packages[ansible_os_family] }}"
+    project_auth_key: 0123456789ABCDEF0123456789ABCDEF
+    project_auth_key_name: primary
+
+    # this test case follows the same steps described at
+    # https://docs.sensu.io/sensu-go/latest/guides/generate-certificates/
+    cfssl_certs:
+      - name: agent1.example.com.json
+        # Subject Alternative Name, or SAN in short
+        SAN: []
+        profile: agent
+        owner: nobody
+        json:
+          CN: agent1.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
+      - name: backend-1.example.com.json
+        SAN:
+          - localhost
+          - 127.0.0.1
+          - 10.0.0.1
+          - backend-1
+        profile: backend
+        json:
+          CN: backend-1.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
+      - name: backend-2.example.com.json
+        SAN:
+          - localhost
+          - 127.0.0.1
+          - 10.0.0.2
+          - backend-2
+        profile: backend
+        json:
+          CN: backend-2.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
+      - name: backend-3.example.com.json
+        SAN:
+          - localhost
+          - 127.0.0.1
+          - 10.0.0.3
+          - backend-3
+        profile: backend
+        json:
+          CN: backend-3.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
+    cfssl_ca_config:
+      auth_keys:
+        primary:
+          type: standard
+          key: "{{ project_auth_key }}"
+      signing:
+        default:
+          expiry: 17520h
+          usages:
+            - signing
+            - key encipherment
+            - client auth
+          auth_key: "{{ project_auth_key_name }}"
+        profiles:
+          backend:
+            expiry: 4320h
+            usages:
+              - signing
+              - key encipherment
+              - server auth
+            auth_key: "{{ project_auth_key_name }}"
+          agent:
+            expiry: 4320h
+            usages:
+              - signing
+              - key encipherment
+              - client auth
+            auth_key: "{{ project_auth_key_name }}"
+
+    # see https://github.com/cloudflare/cfssl/tree/master/certdb/README.md
+    cfssl_db_config:
+      driver: sqlite3
+      data_source: "{{ cfssl_db_sqlite_database_file }}"
+
+    cfssl_ca_csr_config:
+      CN: Sensu Test CA
+      key:
+        algo: rsa
+        size: 2048
+    os_cfssl_flags:
+      FreeBSD: |
+        cfssl_flags="-db-config /usr/local/etc/ssl/db.json -ca /usr/local/etc/ssl/ca.pem -ca-key /usr/local/etc/ssl/ca-key.pem -config {{ cfssl_ca_config_file }}"
+      Debian: ""
+    cfssl_flags: "{{ os_cfssl_flags[ansible_os_family] }}"
+    # __________________________________________package
+    freebsd_pkg_repo:
+
+      FreeBSD:
+        enabled: "false"
+        state: present
+
+      # enable my own package repository, where the latest package is
+      # available
+      FreeBSD_devel:
+        enabled: "true"
+        state: present
+        url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.', '') }}{{ansible_architecture}}-default-default/"
+        mirror_type: http
+        signature_type: none
+        priority: 100
