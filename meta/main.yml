@@ -12,7 +12,7 @@ galaxy_info:
         - 12.1
     - name: Ubuntu
       versions:
-        - bionic
+        - focal
   galaxy_tags:
     - cfssl
     - ssl
