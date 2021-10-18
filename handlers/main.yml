@@ -2,5 +2,7 @@
 
 - name: Restart cfssl
   service:
-    name: cfssl
+    name: "{{ cfssl_service }}"
     state: restarted
+  when:
+    - cfssl_db_type | length > 0

@@ -55,3 +55,12 @@ suites:
     verifier:
       name: shell
       command: rspec -c -f d -I tests/serverspec tests/serverspec/default_spec.rb
+  - name: api
+    provisioner:
+      name: ansible_playbook
+      playbook: tests/serverspec/api.yml
+    verifier:
+      name: shell
+      command: rspec -c -f d -I tests/serverspec tests/serverspec/api_spec.rb
+    includes:
+      - freebsd-13.0-amd64

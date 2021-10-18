@@ -5,6 +5,7 @@ package = "cfssl"
 ca_root_dir = "/etc/ssl"
 user    = "cfssl"
 group   = "cfssl"
+default_user = "root"
 default_group = "root"
 extra_packages = []
 public_mode = case os[:family]
@@ -13,7 +14,7 @@ public_mode = case os[:family]
               else
                 664
               end
-service = "cfssl"
+
 case os[:family]
 when "ubuntu"
   package = "golang-cfssl"
@@ -27,6 +28,18 @@ csr_config = "#{ca_root_dir}/ca-csr.json"
 ca_key_private = "#{ca_root_dir}/ca-key.pem"
 ca_key_public = "#{ca_root_dir}/ca.pem"
 certs_dir = "#{ca_root_dir}/certs"
+certdb_dir = case os[:family]
+             when "freebsd"
+               "/var/db/cfssl"
+             else
+               "/var/lib/cfssl"
+             end
+certdb_file = "#{certdb_dir}/certdb.db"
+db_config_file = "#{ca_root_dir}/db.json"
+migration_dir = "#{ca_root_dir}/goose/sqlite"
+log_file = "/var/log/messages"
+ports = [8888]
+service = "cfssl"
 
 backends = %w[backend-1 backend-2 backend-3]
 agents = %w[agent1]
@@ -46,17 +59,51 @@ describe package(package) do
   it { should be_installed }
 end
 
-case os[:family]
-when "freebsd"
-  describe file "/etc/rc.conf.d/cfssl" do
-    it { should_not exist }
-  end
-end
-
 describe file ca_root_dir do
   it { should exist }
   it { should be_directory }
   it { should be_mode 755 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+end
+
+describe file migration_dir do
+  it { should exist }
+  it { should be_directory }
+  it { should be_mode 755 }
+  it { should be_owned_by default_user }
+  it { should be_grouped_into group }
+end
+
+describe file "#{migration_dir}/dbconf.yml" do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 644 }
+  it { should be_owned_by default_user }
+  it { should be_grouped_into default_group }
+  its(:content) { should match(/Managed by ansible/) }
+end
+
+describe file certdb_dir do
+  it { should exist }
+  it { should be_directory }
+  it { should be_mode 755 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+end
+
+describe file certdb_file do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 640 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+end
+
+describe file db_config_file do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 640 }
   it { should be_owned_by user }
   it { should be_grouped_into group }
 end
@@ -166,6 +213,34 @@ backends.each do |backend|
 end
 
 describe service service do
-  it { should_not be_running }
-  it { should_not be_enabled }
+  it { should be_enabled }
+  it { should be_running }
+end
+
+ports.each do |p|
+  describe port p do
+    it { should be_listening }
+  end
+end
+
+%w[
+  /
+  /api/v1/cfssl/authsign
+  /api/v1/cfssl/bundle
+  /api/v1/cfssl/certadd
+  /api/v1/cfssl/certinfo
+  /api/v1/cfssl/crl
+  /api/v1/cfssl/gencrl
+  /api/v1/cfssl/health
+  /api/v1/cfssl/info
+  /api/v1/cfssl/init_ca
+  /api/v1/cfssl/newcert
+  /api/v1/cfssl/newkey
+  /api/v1/cfssl/revoke
+  /api/v1/cfssl/scan
+  /api/v1/cfssl/scaninfo
+].each do |endpoint|
+  describe file log_file do
+    its(:content) { should match(/endpoint '#{endpoint}' is enabled/) }
+  end
 end

@@ -17,3 +17,18 @@
   user:
     name: "{{ cfssl_user }}"
     group: "{{ cfssl_group }}"
+
+- name: Create /etc/rc.conf.d/cfssl when cfssl_db_type is not empty
+  ansible.builtin.template:
+    src: FreeBSD.rc.j2
+    dest: /etc/rc.conf.d/cfssl
+    mode: "0644"
+  when:
+    - cfssl_db_type | length > 0
+
+- name: Enable cfssl_service when cfssl_db_type is not empty
+  service:
+    name: "{{ cfssl_service }}"
+    enabled: yes
+  when:
+    - cfssl_db_type | length > 0

@@ -29,6 +29,8 @@
     dest: "{{ cfssl_ca_csr_file }}"
     mode: "0644"
     # validate: echo %s
+  notify:
+    - Restart cfssl
 
 - name: Create certificate for CA
   shell:
@@ -37,18 +39,37 @@
     creates: "{{ cfssl_ca_root_dir }}/ca-key.pem"
   become: yes
   become_user: "{{ cfssl_user }}"
+  notify:
+    - Restart cfssl
 
 - name: Ensure cfssl group can read CA root private key
   file:
     path: "{{ cfssl_ca_root_dir }}/ca-key.pem"
     mode: "0640"
     group: "{{ cfssl_group }}"
+  notify:
+    - Restart cfssl
 
 - name: Create cfssl_ca_config_file
   template:
     src: ca-config.json.j2
     dest: "{{ cfssl_ca_config_file }}"
     mode: "0644"
+  notify:
+    - Restart cfssl
+
+- name: See if cfssl_db_sqlite_database_file exists (sqlite)
+  ansible.builtin.stat:
+    path: "{{ cfssl_db_sqlite_database_file }}"
+  register: __stat_cfssl_sqlite_database_file
+  when:
+    - cfssl_db_type == 'sqlite'
+
+- name: Create database (sqlite)
+  include_tasks: create-db-sqlite.yml
+  when:
+    - cfssl_db_type == 'sqlite'
+    - not __stat_cfssl_sqlite_database_file.stat or not __stat_cfssl_sqlite_database_file.stat.exists
 
 - name: Create json file for certs
   template:
@@ -74,3 +95,10 @@
     owner: "{{ item['owner'] | default(cfssl_user) }}"
     group: "{{ cfssl_group }}"
   with_items: "{{ cfssl_certs }}"
+
+- name: Start cfssl_service when cfssl_db_type is not empty
+  ansible.builtin.service:
+    name: "{{ cfssl_service }}"
+    state: started
+  when:
+    - cfssl_db_type | length > 0

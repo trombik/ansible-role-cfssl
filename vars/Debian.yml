@@ -3,3 +3,6 @@ __cfssl_user: cfssl
 __cfssl_group: cfssl
 __cfssl_package: golang-cfssl
 __cfssl_ca_root_dir: /etc/ssl
+__cfssl_db_dir: /var/lib/cfssl
+# XXX ubuntu package is too old
+__cfssl_db_sqlite_sql_file_dir: ""

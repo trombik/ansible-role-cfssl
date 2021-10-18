@@ -1,0 +1,54 @@
+---
+
+- name: Create cfssl_db_dir (sqlite)
+  ansible.builtin.file:
+    path: "{{ cfssl_db_dir }}"
+    owner: "{{ cfssl_user }}"
+    group: "{{ cfssl_group }}"
+    mode: "0755"
+    state: directory
+
+- name: Create db.json
+  ansible.builtin.template:
+    src: db.json.j2
+    dest: "{{ cfssl_ca_root_dir }}/db.json"
+    mode: "0640"
+    owner: "{{ cfssl_user }}"
+    group: "{{ cfssl_group }}"
+  notify:
+    - Restart cfssl
+
+- name: Create goose directory
+  ansible.builtin.file:
+    path: "{{ cfssl_db_migration_dir }}"
+    mode: "0755"
+    state: directory
+
+- name: Create goose migration config
+  ansible.builtin.template:
+    src: dbconf.yml.j2
+    dest: "{{ cfssl_db_migration_dir }}/dbconf.yml"
+    mode: "0644"
+
+- name: Copy migration SQL files
+  copy:
+    src: "{{ cfssl_db_sqlite_sql_file_dir }}"
+    dest: "{{ cfssl_db_migration_dir }}/migrations"
+
+- name: Create certdb.db (sqlite)
+  ansible.builtin.command: "goose -path {{ cfssl_db_migration_dir }} -env {{ cfssl_db_migration_environment }} up"
+  args:
+    creates: "{{ cfssl_db_sqlite_database_file }}"
+  become: yes
+  become_user: "{{ cfssl_user }}"
+  notify:
+    - Restart cfssl
+
+- name: Set permission on cfssl_db_sqlite_database_file (sqlite)
+  # XXX ansible.builtin.command does not support umask
+  ansible.builtin.file:
+    path: "{{ cfssl_db_sqlite_database_file }}"
+    mode: "0640"
+    state: file
+  notify:
+    - Restart cfssl
