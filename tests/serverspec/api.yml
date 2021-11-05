@@ -16,6 +16,7 @@
     # & start cfssl as a server
     # * create a signed key for reverse proxy by calling cfssl API
     # * start `haproxy` as a reverse proxy for cfssl API server
+    # * require HTTP client to authenticate
     #
     # Requires `trombik.haproxy` and `trombik.x509_certificate` roles.
     # __________________________________________cfssl
@@ -262,6 +263,7 @@
 
       frontend http-in
         bind *:443 ssl crt {{ project_haproxy_cert_dir }}/combined.pem
+        http-request auth unless { http_auth(basic-auth-list) }
         default_backend servers
 
       backend servers
@@ -278,6 +280,11 @@
         stats uri /
         stats refresh 10s
         stats admin if LOCALHOST
+
+      userlist basic-auth-list
+        # "password".crypt("$5$" + rand(36**8).to_s(36))
+        # password
+        user foo password $5$8xw72ptd$rVzVY11TVLNuBJYBhxoTLMahz7a7TZHnWUCdbJ3d058
 
     os_haproxy_flags:
       FreeBSD: |
