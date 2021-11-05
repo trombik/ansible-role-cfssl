@@ -5,6 +5,9 @@
       when: ansible_os_family == 'FreeBSD'
     - role: ansible-role-cfssl
     - role: trombik.haproxy
+  handlers:
+    - name: Restart foo
+      command: "logger foo is restarted"
   vars:
 
     # An example to:
@@ -165,7 +168,9 @@
             owner: www
             group: www
             mode: "0440"
-          notify: Restart haproxy  # XXX not implemented
+            notify:
+              - Restart haproxy
+              - Restart foo
           body:
             profile: backend
             request:
