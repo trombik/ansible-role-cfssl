@@ -278,8 +278,11 @@ if $API
   ].each do |endpoint|
     describe file log_file do
       its(:content) { should match(/endpoint '#{endpoint}' is enabled/) }
-      its(:content) { should match(/foo is restarted/) }
     end
+  end
+
+  describe file log_file do
+    its(:content) { should match(/foo is restarted/) }
   end
 
   describe service proxy_service do
