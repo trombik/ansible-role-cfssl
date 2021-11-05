@@ -1,3 +1,7 @@
+## Release 1.3.1
+
+* 98ce6d0 bugfix: update api example to support key rotation
+
 ## Release 1.3.0
 
 * 921fd66 feature: officially support API server
