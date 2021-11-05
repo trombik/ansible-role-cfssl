@@ -32,6 +32,23 @@ backends = %w[backend-1 backend-2 backend-3]
 agents = %w[agent1]
 domain = "example.com"
 
+# rubocop:disable Style/GlobalVars
+if $API
+  # rubocop:enable Style/GlobalVars
+  proxy_service = "haproxy"
+  default_user = "root"
+  certdb_dir = case os[:family]
+               when "freebsd"
+                 "/var/db/cfssl"
+               else
+                 "/var/lib/cfssl"
+               end
+  certdb_file = "#{certdb_dir}/certdb.db"
+  db_config_file = "#{ca_root_dir}/db.json"
+  migration_dir = "#{ca_root_dir}/goose/sqlite"
+  log_file = "/var/log/messages"
+end
+
 describe user(user) do
   it { should exist }
 end
@@ -49,7 +66,13 @@ end
 case os[:family]
 when "freebsd"
   describe file "/etc/rc.conf.d/cfssl" do
-    it { should_not exist }
+    # rubocop:disable Style/GlobalVars
+    if $API
+      # rubocop:enable Style/GlobalVars
+      it { should exist }
+    else
+      it { should_not exist }
+    end
   end
 end
 
@@ -165,7 +188,111 @@ backends.each do |backend|
   end
 end
 
-describe service service do
-  it { should_not be_running }
-  it { should_not be_enabled }
+# rubocop:disable Style/GlobalVars
+if $API
+  # rubocop:enable Style/GlobalVars
+  describe service service do
+    it { should be_running }
+    it { should be_enabled }
+  end
+else
+  describe service service do
+    it { should_not be_running }
+    it { should_not be_enabled }
+  end
+end
+
+# rubocop:disable Style/GlobalVars
+if $API
+  # rubocop:enable Style/GlobalVars
+  describe file ca_root_dir do
+    it { should exist }
+    it { should be_directory }
+    it { should be_mode 755 }
+    it { should be_owned_by user }
+    it { should be_grouped_into group }
+  end
+
+  describe file migration_dir do
+    it { should exist }
+    it { should be_directory }
+    it { should be_mode 755 }
+    it { should be_owned_by default_user }
+    it { should be_grouped_into group }
+  end
+
+  describe file "#{migration_dir}/dbconf.yml" do
+    it { should exist }
+    it { should be_file }
+    it { should be_mode 644 }
+    it { should be_owned_by default_user }
+    it { should be_grouped_into default_group }
+    its(:content) { should match(/Managed by ansible/) }
+  end
+
+  describe file certdb_dir do
+    it { should exist }
+    it { should be_directory }
+    it { should be_mode 755 }
+    it { should be_owned_by user }
+    it { should be_grouped_into group }
+  end
+
+  describe file certdb_file do
+    it { should exist }
+    it { should be_file }
+    it { should be_mode 640 }
+    it { should be_owned_by user }
+    it { should be_grouped_into group }
+  end
+
+  describe file db_config_file do
+    it { should exist }
+    it { should be_file }
+    it { should be_mode 640 }
+    it { should be_owned_by user }
+    it { should be_grouped_into group }
+  end
+
+  describe service service do
+    it { should be_enabled }
+    it { should be_running }
+  end
+
+  %w[
+    /
+    /api/v1/cfssl/authsign
+    /api/v1/cfssl/bundle
+    /api/v1/cfssl/certadd
+    /api/v1/cfssl/certinfo
+    /api/v1/cfssl/crl
+    /api/v1/cfssl/gencrl
+    /api/v1/cfssl/health
+    /api/v1/cfssl/info
+    /api/v1/cfssl/init_ca
+    /api/v1/cfssl/newcert
+    /api/v1/cfssl/newkey
+    /api/v1/cfssl/revoke
+    /api/v1/cfssl/scan
+    /api/v1/cfssl/scaninfo
+  ].each do |endpoint|
+    describe file log_file do
+      its(:content) { should match(/endpoint '#{endpoint}' is enabled/) }
+    end
+  end
+
+  describe service proxy_service do
+    it { should be_enabled }
+    it { should be_running }
+  end
+
+  describe port 443 do
+    it { should be_listening }
+  end
+
+  describe command "curl -vv --cacert /usr/local/etc/ssl/ca.pem https://localhost/" do
+    its(:stderr) { should match(/#{Regexp.escape("HTTP/1.1")} 200/) }
+    its(:stdout) { should match(/#{Regexp.escape("<title>CFSSL</title>")}/) }
+    its(:exit_status) { should eq 0 }
+  end
 end

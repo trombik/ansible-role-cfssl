@@ -1,7 +1,15 @@
 # `trombik.cfssl`
 
-`ansible` role for `cfssl`. The API server (`cfssl serve`) is not yet
-supported. Implements signing only for now.
+`ansible` role for `cfssl`. The API server (`cfssl serve`) is supported.
+
+## For all users
+
+As few distributions support the API server in their packages, `cfssl_db_*`
+role variables are subject to change.
+
+To run `cfssl` as a server, your distribution package must provide startup
+script, and other modifications to the package. AFAIK, the one from Ubuntu
+does not. Thus, API server support is not implemented for Debian-variants.
 
 # Requirements
 
@@ -21,7 +29,17 @@ None
 | `cfssl_ca_config_file` | path to `ca-config.json` | `{{ cfssl_ca_root_dir }}/ca-config.json` |
 | `cfssl_ca_config` | content of `cfssl_ca_config_file` | `{}` |
 | `cfssl_certs_dir` | path to directory to keep signed certificates | `{{ cfssl_ca_root_dir }}/certs` |
-| `cfssl_flags` | not yet used | `""` |
+| `cfssl_service` | Service name of `cfssl` | `cfssl` |
+| `cfssl_db_config` | Database configuration in YAML. See [certdb/README.nd](https://github.com/cloudflare/cfssl/tree/master/certdb/README.md) in the upstream source code for more details. | `{}` |
+| `cfssl_db_type` | The type of the database. Supported value is `sqlite` only. If specified, the role runs specific tasks for the database, and starts `cfssl` as server. | `""` |
+| `cfssl_db_dir` | Path to the database directory | `{{ __cfssl_db_dir }}` |
+| `cfssl_db_sqlite_bin` | File name of `sqlite` command | `sqlite3` |
+| `cfssl_db_sqlite_database_file` | Path to `sqlite` database file | `{{ cfssl_db_dir }}/certdb.db` |
+| `cfssl_db_sqlite_sql_file_dir` | Path to a directory where SQL files are stored. | `{{ __cfssl_db_sqlite_sql_file_dir }}` |
+| `cfssl_db_migration_dir` | Path to database migration directory | `{{ cfssl_ca_root_dir }}/goose/{{ cfssl_db_type }}` |
+| `cfssl_db_migration_config` | Configuration for database migration | `{}` |
+| `cfssl_db_migration_environment` | Environment for database migration | `development` |
+| `cfssl_flags` | Additional options for startup script | `""` |
 | `cfssl_certs` | list of certificates to sign (see below) | `""` |
 
 ## `cfssl_certs`
@@ -44,6 +62,8 @@ This is a list of dict. An element represents a CSR.
 | `__cfssl_group` | `cfssl` |
 | `__cfssl_package` | `golang-cfssl` |
 | `__cfssl_ca_root_dir` | `/etc/ssl` |
+| `__cfssl_db_dir` | `/var/lib/cfssl` |
+| `__cfssl_db_sqlite_sql_file_dir` | `""` |
 
 ## FreeBSD
 
@@ -53,12 +73,18 @@ This is a list of dict. An element represents a CSR.
 | `__cfssl_group` | `cfssl` |
 | `__cfssl_package` | `security/cfssl` |
 | `__cfssl_ca_root_dir` | `/usr/local/etc/ssl` |
+| `__cfssl_db_dir` | `/var/db/cfssl` |
+| `__cfssl_db_sqlite_sql_file_dir` | `/usr/local/share/cfssl/certdb/sqlite/migrations` |
 
 # Dependencies
 
 None
 
 # Example Playbook
+
+This example manages `cfssl`, and signs a few certificates.
+
+For an example for API server, see [tests/serverspec/api.yml](tests/serverspec/api.yml).
 
 ```yaml
 ---

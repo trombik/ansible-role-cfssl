@@ -4,73 +4,18 @@
     - role: trombik.freebsd_pkg_repo
       when: ansible_os_family == 'FreeBSD'
     - role: ansible-role-cfssl
+    - role: trombik.haproxy
   vars:
-    # steps to run the server and create certificate.
-    #
-    # run server:
-    # sudo -u cfssl cfssl serve -db-config /usr/local/etc/ssl/db.json -ca /usr/local/etc/ssl/ca.pem -ca-key /usr/local/etc/ssl/ca-key.pem -config /usr/local/etc/ssl/ca-config.json
-    #
-    # create client.config.json and client.csr.json:
-    # cat client.config.json
-    # {
-    #    "auth_keys" : {
-    #       "primary" : {
-    #          "type" : "standard",
-    #          "key" : "0123456789ABCDEF0123456789ABCDEF"
-    #       }
-    #    },
-    #    "signing" : {
-    #       "default" : {
-    #          "auth_remote" : {
-    #             "remote" : "cfssl_server",
-    #             "auth_key" : "primary"
-    #          }
-    #       }
-    #    },
-    #    "remotes" : {
-    #       "cfssl_server" : "localhost:8888"
-    #    }
-    # }
-    #
-    # cat client.csr.json
-    # {
-    #   "CN": "client_username",
-    #   "hosts": ["test.example.com"],
-    #   "key": {
-    #     "algo": "ecdsa",
-    #     "size": 256
-    #   },
-    #   "names": [
-    #     {
-    #       "C": "US",
-    #       "L": "San Francisco",
-    #       "OU": "Some location",
-    #       "ST": "CA"
-    #     }
-    #   ]
-    # }
-    #
-    # cfssl gencert -config client.config.json -profile client client.csr.json | cfssljson -bare my-client
-    #
-    # see the cert:
-    # openssl x509 -text -in my-client.pem
 
-    cfssl_db_migration_environment: production
-    cfssl_db_migration_config:
-      production:
-        driver: sqlite3
-        open: "{{ cfssl_db_sqlite_database_file }}"
-
-    cfssl_db_type: sqlite
-    os_cfssl_extra_packages:
-      FreeBSD: sqlite3
-      Debian: sqlite3
-    cfssl_extra_packages: "{{ os_cfssl_extra_packages[ansible_os_family] }}"
-    project_auth_key: 0123456789ABCDEF0123456789ABCDEF
-    project_auth_key_name: primary
-
-    # this test case follows the same steps described at
-    # https://docs.sensu.io/sensu-go/latest/guides/generate-certificates/
+    # An example to:
+    #
+    # * create signed keys with cfssl_certs
+    # & start cfssl as a server
+    # * create a signed key for reverse proxy by calling cfssl API
+    # * start `haproxy` as a reverse proxy for cfssl API server
+    #
+    # Requires `trombik.haproxy` and `trombik.x509_certificate` roles.
+    # __________________________________________cfssl
     cfssl_certs:
       - name: agent1.example.com.json
         # Subject Alternative Name, or SAN in short
@@ -126,6 +71,23 @@
           key:
             algo: rsa
             size: 2048
+
+    cfssl_db_migration_environment: production
+    cfssl_db_migration_config:
+      production:
+        driver: sqlite3
+        open: "{{ cfssl_db_sqlite_database_file }}"
+
+    cfssl_db_type: sqlite
+    os_cfssl_extra_packages:
+      FreeBSD: sqlite3
+      Debian: sqlite3
+    cfssl_extra_packages: "{{ os_cfssl_extra_packages[ansible_os_family] }}"
+    project_auth_key: 0123456789ABCDEF0123456789ABCDEF
+    project_auth_key_name: primary
+
+    # this test case follows the same steps described at
+    # https://docs.sensu.io/sensu-go/latest/guides/generate-certificates/
     cfssl_ca_config:
       auth_keys:
         primary:
@@ -170,11 +132,165 @@
         cfssl_flags="-db-config /usr/local/etc/ssl/db.json -ca /usr/local/etc/ssl/ca.pem -ca-key /usr/local/etc/ssl/ca-key.pem -config {{ cfssl_ca_config_file }}"
       Debian: ""
     cfssl_flags: "{{ os_cfssl_flags[ansible_os_family] }}"
+    # "
+
+    # __________________________________________haproxy
+    project_backend_host: 127.0.0.1
+    project_backend_port: 8888
+    project_haproxy_cert_dir: /usr/local/etc/haproxy/certs
+
+    haproxy_x509_certificate_enable: yes
+    haproxy_x509_certificate_vars:
+      x509_certificate_debug_log: yes
+      x509_certificate_cfssl_scheme: http
+      x509_certificate_dir: "{{ project_haproxy_cert_dir }}"
+      x509_certificate_cfssl_certificate_newcert:
+        - csr:
+            path: "{{ project_haproxy_cert_dir }}/localhost.csr"
+            owner: www
+            group: www
+            mode: "0444"
+          public:
+            path: "{{ project_haproxy_cert_dir }}/localhost.pem"
+            owner: www
+            group: www
+            mode: "0444"
+          private:
+            path: "{{ project_haproxy_cert_dir }}/localhost.key"
+            owner: www
+            group: www
+            mode: "0440"
+          combined:
+            path: "{{ project_haproxy_cert_dir }}/combined.pem"
+            owner: www
+            group: www
+            mode: "0440"
+          notify: Restart haproxy  # XXX not implemented
+          body:
+            profile: backend
+            request:
+              hosts:
+                - localhost
+                - 127.0.0.1
+                - www.example.com
+              names:
+                - C: US
+                  ST: California
+                  L: San Francisco
+                  O: example.com
+              CN: www.example.com
+
+    os_haproxy_selinux_seport:
+      FreeBSD: {}
+      Debian: {}
+      RedHat:
+        ports:
+          - 80
+          - 8404
+        proto: tcp
+        setype: http_port_t
+    haproxy_selinux_seport: "{{ os_haproxy_selinux_seport[ansible_os_family] }}"
+    haproxy_config: |
+      global
+        daemon
+      {% if ansible_os_family == 'FreeBSD' %}
+      # FreeBSD package does not provide default
+        maxconn 4096
+        log /var/run/log local0 notice
+          user {{ haproxy_user }}
+          group {{ haproxy_group }}
+      {% elif ansible_os_family == 'Debian' %}
+        log /dev/log  local0
+        log /dev/log  local1 notice
+        chroot {{ haproxy_chroot_dir }}
+        stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+        stats timeout 30s
+        user {{ haproxy_user }}
+        group {{ haproxy_group }}
+
+        # Default SSL material locations
+        ca-base /etc/ssl/certs
+        crt-base /etc/ssl/private
+
+        # See: https://ssl-config.mozilla.org/#server=haproxy&server-version=2.0.3&config=intermediate
+          ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+          ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+          ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+      {% elif ansible_os_family == 'OpenBSD' %}
+        log 127.0.0.1   local0 debug
+        maxconn 1024
+        chroot {{ haproxy_chroot_dir }}
+        uid 604
+        gid 604
+        pidfile /var/run/haproxy.pid
+      {% elif ansible_os_family == 'RedHat' %}
+      log         127.0.0.1 local2
+      chroot      /var/lib/haproxy
+      pidfile     /var/run/haproxy.pid
+      maxconn     4000
+      user        haproxy
+      group       haproxy
+      daemon
+      {% endif %}
+
+      defaults
+        log global
+        mode http
+        timeout connect 5s
+        timeout client 10s
+        timeout server 10s
+        option  httplog
+        option  dontlognull
+        retries 3
+        maxconn 2000
+      {% if ansible_os_family == 'Debian' %}
+        errorfile 400 /etc/haproxy/errors/400.http
+        errorfile 403 /etc/haproxy/errors/403.http
+        errorfile 408 /etc/haproxy/errors/408.http
+        errorfile 500 /etc/haproxy/errors/500.http
+        errorfile 502 /etc/haproxy/errors/502.http
+        errorfile 503 /etc/haproxy/errors/503.http
+        errorfile 504 /etc/haproxy/errors/504.http
+      {% elif ansible_os_family == 'OpenBSD' %}
+        option  redispatch
+      {% endif %}
+
+      frontend http-in
+        bind *:443 ssl crt {{ project_haproxy_cert_dir }}/combined.pem
+        default_backend servers
+
+      backend servers
+        option forwardfor
+        server server1 {{ project_backend_host }}:{{ project_backend_port }} maxconn 32 check
+
+      frontend stats
+        bind *:8404
+        mode http
+        no log
+        acl network_allowed src 127.0.0.0/8
+        tcp-request connection reject if !network_allowed
+        stats enable
+        stats uri /
+        stats refresh 10s
+        stats admin if LOCALHOST
+
+    os_haproxy_flags:
+      FreeBSD: |
+        haproxy_config="{{ haproxy_conf_file }}"
+        #haproxy_flags="-q -f ${haproxy_config} -p ${pidfile}"
+      Debian: ""
+      OpenBSD: ""
+      RedHat: |
+        OPTIONS=""
+    haproxy_flags: "{{ os_haproxy_flags[ansible_os_family] }}"
+    haproxy_extra_packages:
+      - zsh
+
     # __________________________________________package
     freebsd_pkg_repo:
 
       FreeBSD:
-        enabled: "false"
+        enabled: "true"
         state: present
 
       # enable my own package repository, where the latest package is

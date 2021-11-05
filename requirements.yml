@@ -1,3 +1,5 @@
 ---
 roles:
   - name: trombik.freebsd_pkg_repo
+  - name: trombik.x509_certificate
+  - name: trombik.haproxy
