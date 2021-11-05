@@ -291,9 +291,14 @@ if $API
     it { should be_listening }
   end
 
-  describe command "curl -vv --cacert /usr/local/etc/ssl/ca.pem https://localhost/" do
+  describe command "curl -vv --user foo:password --cacert /usr/local/etc/ssl/ca.pem https://localhost/" do
     its(:stderr) { should match(/#{Regexp.escape("HTTP/1.1")} 200/) }
     its(:stdout) { should match(/#{Regexp.escape("<title>CFSSL</title>")}/) }
+    its(:exit_status) { should eq 0 }
+  end
+
+  describe command "curl -vv --cacert /usr/local/etc/ssl/ca.pem https://localhost/" do
+    its(:stderr) { should match(/#{Regexp.escape("HTTP/1.1")} 401/) }
     its(:exit_status) { should eq 0 }
   end
 end
