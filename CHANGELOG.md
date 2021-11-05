@@ -1,3 +1,7 @@
+## Release 1.3.0
+
+* 921fd66 feature: officially support API server
+
 ## Release 1.2.0
 
 * d99d535 imp: suport APIs, requires updated FreeBSD package
