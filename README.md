@@ -128,8 +128,6 @@ For an example for API server, see [tests/serverspec/api.yml](tests/serverspec/a
 ---
 - hosts: localhost
   roles:
-    - role: trombik.freebsd_pkg_repo
-      when: ansible_os_family == 'FreeBSD'
     - role: ansible-role-cfssl
   vars:
     # this test case follows the same steps described at
@@ -216,23 +214,6 @@ For an example for API server, see [tests/serverspec/api.yml](tests/serverspec/a
       key:
         algo: rsa
         size: 2048
-    # __________________________________________package
-    freebsd_pkg_repo:
-
-      # disable the default package repository
-      FreeBSD:
-        enabled: "false"
-        state: present
-
-      # enable my own package repository, where the latest package is
-      # available
-      FreeBSD_devel:
-        enabled: "true"
-        state: present
-        url: "http://pkg.i.trombik.org/{{ ansible_distribution_version | regex_replace('\\.', '') }}{{ansible_architecture}}-default-default/"
-        mirror_type: http
-        signature_type: none
-        priority: 100
 ```
 
 # License
