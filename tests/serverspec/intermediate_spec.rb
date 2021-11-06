@@ -1,6 +1,5 @@
 require_relative "spec_helper"
 
-
 ca_dir = "/usr/local/etc/cfssl"
 ca_root_dir = "#{ca_dir}/root"
 
