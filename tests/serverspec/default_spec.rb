@@ -201,7 +201,10 @@ if $API
   end
 else
   describe service service do
-    it { pending "does not work deu to old serverspec" ; should_not be_running }
+    it do
+      pending "does not work due to old serverspec" if os[:family] == "freebsd"
+      should_not be_running
+    end
     it { should_not be_enabled }
   end
 end
