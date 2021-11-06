@@ -6,9 +6,51 @@
         name: ansible-role-cfssl
       vars:
         cfssl_vars: "{{ project_root_ca }}"
+
+    - name: Include ansible-role-cfssl (development)
+      include_role:
+        name: ansible-role-cfssl
+      vars:
+        cfssl_vars: "{{ project_development_ca }}"
+
+    - name: Include ansible-role-cfssl (production)
+      include_role:
+        name: ansible-role-cfssl
+      vars:
+        cfssl_vars: "{{ project_production_ca }}"
   vars:
+
+    # An example to:
+    #
+    # * Create a root CA
+    # * Create two intermediate root CAs, development and production
+    # * sign two sets of same list of certificates with each key of two CAs
+    #
+    project_development_ca:
+      cfssl_ca_root_dir: /usr/local/etc/cfssl/development
+      cfssl_ca_public_key_file: /usr/local/etc/cfssl/root/certs/Test_development_CA.pem
+      cfssl_ca_secret_key_file: /usr/local/etc/cfssl/root/certs/Test_development_CA-key.pem
+      cfssl_ca_csr_file: /usr/local/etc/cfssl/root/certs/Test_development_CA.csr"
+      cfssl_ca_config_file: /usr/local/etc/cfssl/development/ca-config.json
+      cfssl_ca_config: "{{ project_cfssl_ca_config }}"
+      cfssl_certs: "{{ project_cfssl_certs }}"
+
+    project_production_ca:
+      cfssl_ca_root_dir: /usr/local/etc/cfssl/production
+      cfssl_ca_public_key_file: /usr/local/etc/cfssl/root/certs/Test_production_CA.pem
+      cfssl_ca_secret_key_file: /usr/local/etc/cfssl/root/certs/Test_production_CA-key.pem
+      cfssl_ca_csr_file: /usr/local/etc/cfssl/root/certs/Test_production_CA.csr"
+      cfssl_ca_config_file: /usr/local/etc/cfssl/production/ca-config.json
+      cfssl_ca_config: "{{ project_cfssl_ca_config }}"
+      cfssl_certs: "{{ project_cfssl_certs }}"
+
     project_root_ca:
       cfssl_ca_root_dir: /usr/local/etc/cfssl/root
+      cfssl_ca_public_key_file: /usr/local/etc/cfssl/root/ca.pem
+      cfssl_ca_secret_key_file: /usr/local/etc/cfssl/root/ca-key.pem
+      cfssl_ca_csr_file: "/usr/local/etc/cfssl/root/ca.csr"
+      cfssl_ca_config_file: /usr/local/etc/cfssl/root/ca-config.json
+
       cfssl_ca_csr_config:
         CN: Test root CA
         key:
@@ -69,3 +111,83 @@
             key:
               algo: rsa
               size: 2048
+
+    project_cfssl_ca_config:
+      signing:
+        default:
+          expiry: 17520h
+          usages:
+            - signing
+            - key encipherment
+            - cert sign
+            - crt sign
+        profiles:
+          backend:
+            expiry: 4320h
+            usages:
+              - signing
+              - key encipherment
+              - server auth
+              - client auth
+          agent:
+            expiry: 4320h
+            usages:
+              - signing
+              - key encipherment
+              - client auth
+
+    project_cfssl_certs:
+      - name: agent1.example.com.json
+        # Subject Alternative Name, or SAN in short
+        SAN: []
+        profile: agent
+        owner: nobody
+        json:
+          CN: agent1.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
+      - name: backend-1.example.com.json
+        SAN:
+          - localhost
+          - 127.0.0.1
+          - 10.0.0.1
+          - backend-1
+        profile: backend
+        json:
+          CN: backend-1.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
+      - name: backend-2.example.com.json
+        SAN:
+          - localhost
+          - 127.0.0.1
+          - 10.0.0.2
+          - backend-2
+        profile: backend
+        json:
+          CN: backend-2.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
+      - name: backend-3.example.com.json
+        SAN:
+          - localhost
+          - 127.0.0.1
+          - 10.0.0.3
+          - backend-3
+        profile: backend
+        json:
+          CN: backend-3.example.com
+          hosts:
+            - ""
+          key:
+            algo: rsa
+            size: 2048
