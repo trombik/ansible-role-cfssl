@@ -294,14 +294,20 @@ if $API
     it { should be_listening }
   end
 
-  describe command "curl -vv --user foo:password --cacert /usr/local/etc/ssl/ca.pem https://localhost/" do
+  # XXX wget, instead of curl, is used here because curl, by default, does not
+  # load system's root CA certificate store.
+  describe package "wget" do
+    it { should be_installed }
+  end
+  describe command "wget --user foo --password password --server-response --output-document - https://localhost" do
     its(:stderr) { should match(/#{Regexp.escape("HTTP/1.1")} 200/) }
     its(:stdout) { should match(/#{Regexp.escape("<title>CFSSL</title>")}/) }
     its(:exit_status) { should eq 0 }
   end
 
-  describe command "curl -vv --cacert /usr/local/etc/ssl/ca.pem https://localhost/" do
+  describe command "wget --server-response --output-document - https://localhost/" do
     its(:stderr) { should match(/#{Regexp.escape("HTTP/1.1")} 401/) }
-    its(:exit_status) { should eq 0 }
+    # 6   Username/password authentication failure.
+    its(:exit_status) { should eq 6 }
   end
 end

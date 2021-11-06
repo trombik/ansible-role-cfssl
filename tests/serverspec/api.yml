@@ -144,10 +144,32 @@
     project_haproxy_cert_dir: /usr/local/etc/haproxy/certs
 
     haproxy_x509_certificate_enable: yes
+
+    # install root CA certificate so that haproxy can authenticate users with
+    # signed client certificate, and other commands, such as wget, can verify
+    # the server without specifying path to root CA certificate file.
+    #
+    # note that some tools do not load system's root CA certificate store, for
+    # example, curl. FreeBSD's fetch(1), neither.
+    os_project_root_ca_store_dir:
+      FreeBSD: /usr/local/etc/ssl/certs
+      Debian: /usr/local/share/ca-certificates
+      RedHat: /etc/pki/ca-trust/source/anchors
+      # FIXME investigate how CA store works on OpenBSD
+      OpenBSD: /tmp
+    project_root_ca_store_dir: "{{ os_project_root_ca_store_dir[ansible_os_family] }}"
+
     haproxy_x509_certificate_vars:
       x509_certificate_debug_log: yes
       x509_certificate_cfssl_scheme: http
       x509_certificate_dir: "{{ project_haproxy_cert_dir }}"
+
+      x509_certificate_cfssl_info:
+        - path: "{{ project_root_ca_store_dir }}/primary.crt"
+          body:
+            label: primary
+            profile: default
+
       x509_certificate_cfssl_certificate_newcert:
         - csr:
             path: "{{ project_haproxy_cert_dir }}/localhost.csr"
@@ -296,6 +318,7 @@
         OPTIONS=""
     haproxy_flags: "{{ os_haproxy_flags[ansible_os_family] }}"
     haproxy_extra_packages:
+      - wget
       - zsh
 
     # __________________________________________package
