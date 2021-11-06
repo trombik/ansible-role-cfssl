@@ -54,6 +54,42 @@ This is a list of dict. An element represents a CSR.
 | `json` | content of request JSON file in YAML format | yes |
 | `owner` | Unix user name of owner of the private key file (default is `cfssl_user`) | no |
 
+## Including `trombik.cfssl`
+
+You may include the role from your tasks or roles. Use `vars` to define
+specific role variables by `vars`.
+
+```yaml
+- name: Include role trombik.cfssl
+  include_role:
+    name: trombik.cfssl
+  vars:
+    cfssl_extra_packages:
+      - zsh
+```
+
+However, when you want to pass a single variable that includes the role
+variables, you need to pass your variable to a special bridge role variable,
+`cfssl_vars`.
+
+```yaml
+- name: Include role trombik.cfssl
+  include_role:
+    name: trombik.cfssl
+  vars:
+    cfssl_vars: "{{ my_variable }}"
+```
+
+The following example does NOT work:
+
+```yaml
+- name: Include role trombik.cfssl
+  include_role:
+    name: trombik.cfssl
+  vars: "{{ my_variable }}"
+```
+
+
 ## Debian
 
 | Variable | Default |
