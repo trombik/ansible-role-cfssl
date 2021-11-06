@@ -61,7 +61,7 @@ This is a list of dict. An element represents a CSR.
 | `__cfssl_user` | `cfssl` |
 | `__cfssl_group` | `cfssl` |
 | `__cfssl_package` | `golang-cfssl` |
-| `__cfssl_ca_root_dir` | `/etc/ssl` |
+| `__cfssl_ca_root_dir` | `/etc/cfssl` |
 | `__cfssl_db_dir` | `/var/lib/cfssl` |
 | `__cfssl_db_sqlite_sql_file_dir` | `""` |
 
@@ -72,7 +72,7 @@ This is a list of dict. An element represents a CSR.
 | `__cfssl_user` | `cfssl` |
 | `__cfssl_group` | `cfssl` |
 | `__cfssl_package` | `security/cfssl` |
-| `__cfssl_ca_root_dir` | `/usr/local/etc/ssl` |
+| `__cfssl_ca_root_dir` | `/usr/local/etc/cfssl` |
 | `__cfssl_db_dir` | `/var/db/cfssl` |
 | `__cfssl_db_sqlite_sql_file_dir` | `/usr/local/share/cfssl/certdb/sqlite/migrations` |
 
