@@ -133,7 +133,8 @@
         size: 2048
     os_cfssl_flags:
       FreeBSD: |
-        cfssl_flags="-db-config /usr/local/etc/ssl/db.json -ca /usr/local/etc/ssl/ca.pem -ca-key /usr/local/etc/ssl/ca-key.pem -config {{ cfssl_ca_config_file }}"
+
+        cfssl_flags="-db-config {{ cfssl_ca_root_dir }}/db.json -ca {{ cfssl_ca_root_dir }}/ca.pem -ca-key {{ cfssl_ca_root_dir }}/ca-key.pem -config {{ cfssl_ca_config_file }}"
       Debian: ""
     cfssl_flags: "{{ os_cfssl_flags[ansible_os_family] }}"
     # "
