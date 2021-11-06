@@ -1,0 +1,71 @@
+---
+- hosts: localhost
+  pre_tasks:
+    - name: Include ansible-role-cfssl (root)
+      include_role:
+        name: ansible-role-cfssl
+      vars:
+        cfssl_vars: "{{ project_root_ca }}"
+  vars:
+    project_root_ca:
+      cfssl_ca_root_dir: /usr/local/etc/cfssl/root
+      cfssl_ca_csr_config:
+        CN: Test root CA
+        key:
+          algo: rsa
+          size: 2048
+        names:
+          - C: US
+            ST: California
+            L: San Francisco
+            O: example.org
+      cfssl_ca_config:
+        signing:
+          default:
+            expiry: 17520h
+            usages:
+              - signing
+              - key encipherment
+              - cert sign
+              - crt sign
+          profiles:
+            development:
+              ca_constraint:
+                is_ca: true
+                max_path_len: 0
+                max_path_len_zero: true
+              expiry: 4320h
+              usages:
+                - signing
+                - key encipherment
+                - cert sign
+                - crt sign
+            production:
+              ca_constraint:
+                is_ca: true
+                max_path_len: 0
+                max_path_len_zero: true
+              expiry: 4320h
+              usages:
+                - signing
+                - key encipherment
+                - cert sign
+                - crt sign
+      cfssl_certs:
+        - name: production.json
+          profile: production
+          owner: "{{ cfssl_user }}"
+          json:
+            CN: Test production CA
+            key:
+              algo: rsa
+              size: 2048
+        - name: development.json
+          profile: development
+          owner: "{{ cfssl_user }}"
+          json:
+
+            CN: Test development CA
+            key:
+              algo: rsa
+              size: 2048

@@ -64,3 +64,12 @@ suites:
       command: rspec -c -f d -I tests/serverspec tests/serverspec/api_spec.rb
     includes:
       - freebsd-13.0-amd64
+  - name: intermediate
+    provisioner:
+      name: ansible_playbook
+      playbook: tests/serverspec/intermediate.yml
+    verifier:
+      name: shell
+      command: rspec -c -f d -I tests/serverspec tests/serverspec/intermediate_spec.rb
+    includes:
+      - freebsd-13.0-amd64
