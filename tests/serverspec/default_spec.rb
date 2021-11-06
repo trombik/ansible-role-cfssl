@@ -2,7 +2,12 @@ require "spec_helper"
 require "serverspec"
 
 package = "cfssl"
-ca_root_dir = "/etc/ssl"
+ca_root_dir = case os[:family]
+              when "freebsd"
+                "/usr/local/etc/cfssl"
+              else
+                "/etc/cfssl"
+              end
 user    = "cfssl"
 group   = "cfssl"
 default_group = "root"
@@ -19,7 +24,6 @@ when "ubuntu"
   package = "golang-cfssl"
 when "freebsd"
   default_group = "wheel"
-  ca_root_dir = "/usr/local/etc/ssl"
 end
 
 ca_config = "#{ca_root_dir}/ca-config.json"
@@ -127,7 +131,7 @@ backends.each do |backend|
       it { should be_file }
       case ext
       when "-key.pem"
-        it { should be_mode 660 }
+        it { should be_mode 600 }
         it { should be_owned_by user }
         it { should be_grouped_into group }
       when ".json"
@@ -154,7 +158,7 @@ agents.each do |agent|
       it { should be_file }
       case ext
       when "-key.pem"
-        it { should be_mode 660 }
+        it { should be_mode 600 }
         it { should be_owned_by "nobody" }
         it { should be_grouped_into group }
       when ".json"
@@ -197,7 +201,7 @@ if $API
   end
 else
   describe service service do
-    it { should_not be_running }
+    it { pending "does not work deu to old serverspec" ; should_not be_running }
     it { should_not be_enabled }
   end
 end
