@@ -1,6 +1,8 @@
 require_relative "spec_helper"
 
-ca_root_dir = "/usr/local/etc/cfssl/root"
+
+ca_dir = "/usr/local/etc/cfssl"
+ca_root_dir = "#{ca_dir}/root"
 
 intermediate_ca_names = ["Test development CA", "Test production CA"]
 intermediate_ca = %w[development production]
@@ -33,5 +35,13 @@ end
 intermediate_ca.each do |ca|
   describe file "#{ca_root_dir}/certs/#{ca}.json" do
     its(:content_as_json) { should include("CN" => "Test #{ca} CA") }
+  end
+end
+
+intermediate_ca.each do |ca|
+  describe command "openssl x509 -text -in #{ca_dir}/#{ca}/certs/agent1.example.com.pem" do
+    its(:stderr) { should eq "" }
+    its(:exit_status) { should eq 0 }
+    its(:stdout) { should match(/Issuer: CN = Test #{ca} CA/) }
   end
 end
