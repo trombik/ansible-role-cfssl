@@ -4,6 +4,8 @@ cfssl_group: "{{ __cfssl_group }}"
 cfssl_package: "{{ __cfssl_package }}"
 cfssl_extra_packages: []
 cfssl_ca_root_dir: "{{ __cfssl_ca_root_dir }}"
+cfssl_ca_secret_key_file: "{{ cfssl_ca_root_dir }}/ca-key.pem"
+cfssl_ca_public_key_file: "{{ cfssl_ca_root_dir }}/ca.pem"
 cfssl_ca_csr_file: "{{ cfssl_ca_root_dir }}/ca-csr.json"
 cfssl_ca_csr_config: {}
 cfssl_ca_config_file: "{{ cfssl_ca_root_dir }}/ca-config.json"
