@@ -92,6 +92,8 @@ The following example does NOT work:
   vars: "{{ my_variable }}"
 ```
 
+see [tests/serverspec/intermediate.yml](tests/serverspec/intermediate.yml),
+which includes the role multiple times to create intermediate CAs.
 
 ## Debian
 
@@ -124,6 +126,9 @@ None
 This example manages `cfssl`, and signs a few certificates.
 
 For an example for API server, see [tests/serverspec/api.yml](tests/serverspec/api.yml).
+
+For an example for multiple intermediate CAs under a root CA,
+see [tests/serverspec/intermediate.yml](tests/serverspec/intermediate.yml).
 
 ```yaml
 ---

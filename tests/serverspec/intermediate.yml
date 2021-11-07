@@ -26,24 +26,9 @@
     # * Create two intermediate root CAs, development and production
     # * sign two sets of same list of certificates with each key of two CAs
     #
-    project_development_ca:
-      cfssl_ca_root_dir: /usr/local/etc/cfssl/development
-      cfssl_ca_public_key_file: /usr/local/etc/cfssl/root/certs/Test_development_CA.pem
-      cfssl_ca_secret_key_file: /usr/local/etc/cfssl/root/certs/Test_development_CA-key.pem
-      cfssl_ca_csr_file: /usr/local/etc/cfssl/root/certs/Test_development_CA.csr"
-      cfssl_ca_config_file: /usr/local/etc/cfssl/development/ca-config.json
-      cfssl_ca_config: "{{ project_cfssl_ca_config }}"
-      cfssl_certs: "{{ project_cfssl_certs }}"
+    # inspired by https://jite.eu/2019/2/6/ca-with-cfssl/
 
-    project_production_ca:
-      cfssl_ca_root_dir: /usr/local/etc/cfssl/production
-      cfssl_ca_public_key_file: /usr/local/etc/cfssl/root/certs/Test_production_CA.pem
-      cfssl_ca_secret_key_file: /usr/local/etc/cfssl/root/certs/Test_production_CA-key.pem
-      cfssl_ca_csr_file: /usr/local/etc/cfssl/root/certs/Test_production_CA.csr"
-      cfssl_ca_config_file: /usr/local/etc/cfssl/production/ca-config.json
-      cfssl_ca_config: "{{ project_cfssl_ca_config }}"
-      cfssl_certs: "{{ project_cfssl_certs }}"
-
+    # root CA
     project_root_ca:
       cfssl_ca_root_dir: /usr/local/etc/cfssl/root
       cfssl_ca_public_key_file: /usr/local/etc/cfssl/root/ca.pem
@@ -112,6 +97,26 @@
               algo: rsa
               size: 2048
 
+    # create two CAs
+    project_development_ca:
+      cfssl_ca_root_dir: /usr/local/etc/cfssl/development
+      cfssl_ca_public_key_file: /usr/local/etc/cfssl/root/certs/Test_development_CA.pem
+      cfssl_ca_secret_key_file: /usr/local/etc/cfssl/root/certs/Test_development_CA-key.pem
+      cfssl_ca_csr_file: /usr/local/etc/cfssl/root/certs/Test_development_CA.csr"
+      cfssl_ca_config_file: /usr/local/etc/cfssl/development/ca-config.json
+      cfssl_ca_config: "{{ project_cfssl_ca_config }}"
+      cfssl_certs: "{{ project_cfssl_certs }}"
+
+    project_production_ca:
+      cfssl_ca_root_dir: /usr/local/etc/cfssl/production
+      cfssl_ca_public_key_file: /usr/local/etc/cfssl/root/certs/Test_production_CA.pem
+      cfssl_ca_secret_key_file: /usr/local/etc/cfssl/root/certs/Test_production_CA-key.pem
+      cfssl_ca_csr_file: /usr/local/etc/cfssl/root/certs/Test_production_CA.csr"
+      cfssl_ca_config_file: /usr/local/etc/cfssl/production/ca-config.json
+      cfssl_ca_config: "{{ project_cfssl_ca_config }}"
+      cfssl_certs: "{{ project_cfssl_certs }}"
+
+    # configuration for intermediate CAs
     project_cfssl_ca_config:
       signing:
         default:
@@ -136,6 +141,7 @@
               - key encipherment
               - client auth
 
+    # a list of certificates to create
     project_cfssl_certs:
       - name: agent1.example.com.json
         # Subject Alternative Name, or SAN in short
