@@ -1,6 +1,11 @@
 require_relative "spec_helper"
 
-ca_dir = "/usr/local/etc/cfssl"
+ca_dir = case os[:family]
+         when "freebsd"
+           "/usr/local/etc/cfssl"
+         else
+           "/etc/cfssl"
+         end
 ca_root_dir = "#{ca_dir}/root"
 
 intermediate_ca_names = ["Test development CA", "Test production CA"]
@@ -26,7 +31,12 @@ intermediate_ca_names.each do |n|
   describe file "#{file_name}.pem" do
     it { should exist }
     it { should be_file }
-    it { should be_mode 644 }
+    case os[:family]
+    when "ubuntu"
+      it { should be_mode 664 }
+    else
+      it { should be_mode 644 }
+    end
     its(:content) { should match(/BEGIN CERTIFICATE/) }
   end
 end

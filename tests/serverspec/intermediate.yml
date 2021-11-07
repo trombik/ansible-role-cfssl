@@ -29,12 +29,17 @@
     # inspired by https://jite.eu/2019/2/6/ca-with-cfssl/
 
     # root CA
+    os_project_ca_dir:
+      FreeBSD: /usr/local/etc/cfssl
+      Debian: /etc/cfssl
+    project_ca_dir: "{{ os_project_ca_dir[ansible_os_family] }}"
+    project_root_ca_dir: "{{ project_ca_dir }}/root"
     project_root_ca:
-      cfssl_ca_root_dir: /usr/local/etc/cfssl/root
-      cfssl_ca_public_key_file: /usr/local/etc/cfssl/root/ca.pem
-      cfssl_ca_secret_key_file: /usr/local/etc/cfssl/root/ca-key.pem
-      cfssl_ca_csr_file: "/usr/local/etc/cfssl/root/ca.csr"
-      cfssl_ca_config_file: /usr/local/etc/cfssl/root/ca-config.json
+      cfssl_ca_root_dir: "{{ project_root_ca_dir }}"
+      cfssl_ca_public_key_file: "{{ project_root_ca_dir }}/ca.pem"
+      cfssl_ca_secret_key_file: "{{ project_root_ca_dir }}/ca-key.pem"
+      cfssl_ca_csr_file: "{{ project_root_ca_dir }}/ca.csr"
+      cfssl_ca_config_file: "{{ project_root_ca_dir }}/ca-config.json"
 
       cfssl_ca_csr_config:
         CN: Test root CA
@@ -98,21 +103,23 @@
               size: 2048
 
     # create two CAs
+    project_development_ca_dir: "{{ project_ca_dir }}/development"
     project_development_ca:
-      cfssl_ca_root_dir: /usr/local/etc/cfssl/development
-      cfssl_ca_public_key_file: /usr/local/etc/cfssl/root/certs/Test_development_CA.pem
-      cfssl_ca_secret_key_file: /usr/local/etc/cfssl/root/certs/Test_development_CA-key.pem
-      cfssl_ca_csr_file: /usr/local/etc/cfssl/root/certs/Test_development_CA.csr"
-      cfssl_ca_config_file: /usr/local/etc/cfssl/development/ca-config.json
+      cfssl_ca_root_dir: "{{ project_development_ca_dir }}"
+      cfssl_ca_public_key_file: "{{ project_root_ca_dir }}/certs/Test_development_CA.pem"
+      cfssl_ca_secret_key_file: "{{ project_root_ca_dir }}/certs/Test_development_CA-key.pem"
+      cfssl_ca_csr_file: "{{ project_root_ca_dir }}/certs/Test_development_CA.csr"
+      cfssl_ca_config_file: "{{ project_development_ca_dir }}/ca-config.json"
       cfssl_ca_config: "{{ project_cfssl_ca_config }}"
       cfssl_certs: "{{ project_cfssl_certs }}"
 
+    project_production_ca_dir: "{{ project_ca_dir }}/production"
     project_production_ca:
-      cfssl_ca_root_dir: /usr/local/etc/cfssl/production
-      cfssl_ca_public_key_file: /usr/local/etc/cfssl/root/certs/Test_production_CA.pem
-      cfssl_ca_secret_key_file: /usr/local/etc/cfssl/root/certs/Test_production_CA-key.pem
-      cfssl_ca_csr_file: /usr/local/etc/cfssl/root/certs/Test_production_CA.csr"
-      cfssl_ca_config_file: /usr/local/etc/cfssl/production/ca-config.json
+      cfssl_ca_root_dir: "{{ project_production_ca_dir }}"
+      cfssl_ca_public_key_file: "{{ project_root_ca_dir }}/certs/Test_production_CA.pem"
+      cfssl_ca_secret_key_file: "{{ project_root_ca_dir }}/certs/Test_production_CA-key.pem"
+      cfssl_ca_csr_file: "{{ project_root_ca_dir }}/certs/Test_production_CA.csr"
+      cfssl_ca_config_file: "{{ project_production_ca_dir }}/ca-config.json"
       cfssl_ca_config: "{{ project_cfssl_ca_config }}"
       cfssl_certs: "{{ project_cfssl_certs }}"
 
