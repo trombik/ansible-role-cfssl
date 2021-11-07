@@ -48,9 +48,16 @@ intermediate_ca.each do |ca|
 end
 
 intermediate_ca.each do |ca|
-  describe command "openssl x509 -text -in #{ca_dir}/#{ca}/certs/agent1.example.com.pem" do
+  filename = "#{ca_dir}/#{ca}/certs/agent1.example.com.pem"
+  describe command "openssl x509 -text -in #{filename}" do
     its(:stderr) { should eq "" }
     its(:exit_status) { should eq 0 }
     its(:stdout) { should match(/Issuer: CN = Test #{ca} CA/) }
+  end
+
+  # verify bundled certificate
+  describe command "cat '#{ca_root_dir}/certs/Test_#{ca}_CA.pem' '#{filename}' | openssl verify -CAfile '#{ca_root_dir}/ca.pem'" do
+    its(:stderr) { should eq "" }
+    its(:stdout) { should match(/: OK$/) }
   end
 end
