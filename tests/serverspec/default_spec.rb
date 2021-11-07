@@ -30,6 +30,7 @@ ca_config = "#{ca_root_dir}/ca-config.json"
 csr_config = "#{ca_root_dir}/ca-csr.json"
 ca_key_private = "#{ca_root_dir}/ca-key.pem"
 ca_key_public = "#{ca_root_dir}/ca.pem"
+ca_csr = "#{ca_root_dir}/ca.csr"
 certs_dir = "#{ca_root_dir}/certs"
 
 backends = %w[backend-1 backend-2 backend-3]
@@ -95,6 +96,15 @@ describe file(csr_config) do
   it { should be_owned_by user }
   it { should be_grouped_into default_group }
   its(:content_as_json) { should include("CN" => "Sensu Test CA") }
+end
+
+describe file(ca_csr) do
+  it { should exist }
+  it { should be_file }
+  it { should be_mode 644 }
+  it { should be_owned_by user }
+  it { should be_grouped_into group }
+  its(:content) { should match(/BEGIN CERTIFICATE REQUEST/) }
 end
 
 describe file(ca_config) do
