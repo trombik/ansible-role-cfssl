@@ -34,7 +34,7 @@
 - name: Create ca.csr.json
   template:
     src: ca.csr.json.j2
-    dest: "{{ cfssl_ca_csr_file }}"
+    dest: "{{ cfssl_ca_csr_config_file }}"
     mode: "0644"
     owner: "{{ cfssl_user }}"
     # validate: echo %s
@@ -43,7 +43,7 @@
 
 - name: Create certificate for CA
   shell:
-    cmd: "cfssl genkey -initca {{ cfssl_ca_csr_file }} | cfssljson -bare ca"
+    cmd: "cfssl genkey -initca {{ cfssl_ca_csr_config_file }} | cfssljson -bare ca"
     chdir: "{{ cfssl_ca_root_dir }}"
     creates: "{{ cfssl_ca_secret_key_file }}"
   become: yes
