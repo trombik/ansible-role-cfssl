@@ -26,9 +26,10 @@ None
 | `cfssl_ca_root_dir` | path to root CA directory | `{{ __cfssl_ca_root_dir }}` |
 | `cfssl_ca_secret_key_file` | path to root secret key file | `{{ cfssl_ca_root_dir }}/ca-key.pem` |
 | `cfssl_ca_public_key_file` | path to root public key file | `{{ cfssl_ca_root_dir }}/ca.pem` |
-| `cfssl_ca_csr_file` | path to CSR JSON file of the root CA | `{{ cfssl_ca_root_dir }}/ca.csr.json` |
-| `cfssl_ca_csr_config` | content of `cfssl_ca_csr_file` | `{}` |
-| `cfssl_ca_config_file` | path to `ca-config.json` | `{{ cfssl_ca_root_dir }}/ca-config.json` |
+| `cfssl_ca_csr_file` | path to CSR JSON file of the root CA | `{{ cfssl_ca_root_dir }}/ca.csr` |
+| `cfssl_ca_csr_config` | content of `cfssl_ca_csr_config_file` | `{}` |
+| `cfssl_ca_config_file` | path to CA's configuration file in JSON | `{{ cfssl_ca_root_dir }}/ca-config.json` |
+| `cfssl_ca_csr_config_file` | path to CA's CSR config file in JSON | `"{{ cfssl_ca_root_dir }}/ca-csr.json"` |
 | `cfssl_ca_config` | content of `cfssl_ca_config_file` | `{}` |
 | `cfssl_certs_dir` | path to directory to keep signed certificates | `{{ cfssl_ca_root_dir }}/certs` |
 | `cfssl_service` | Service name of `cfssl` | `cfssl` |
