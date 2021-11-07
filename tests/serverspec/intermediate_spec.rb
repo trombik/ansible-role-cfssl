@@ -12,7 +12,7 @@ intermediate_ca_names.each do |n|
   describe file "#{file_name}-key.pem" do
     it { should exist }
     it { should be_file }
-    it { should be_mode 660 }
+    it { should be_mode 640 }
     its(:content) { should match(/BEGIN RSA PRIVATE KEY/) }
   end
 
