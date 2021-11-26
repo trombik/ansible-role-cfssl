@@ -52,7 +52,7 @@ intermediate_ca.each do |ca|
   describe command "openssl x509 -text -in #{filename}" do
     its(:stderr) { should eq "" }
     its(:exit_status) { should eq 0 }
-    its(:stdout) { should match(/Issuer: CN = Test #{ca} CA/) }
+    its(:stdout) { should match(/Issuer: CN\s*=\s*Test #{ca} CA/) }
   end
 
   # verify bundled certificate

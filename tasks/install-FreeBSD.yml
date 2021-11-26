@@ -1,20 +1,20 @@
 ---
 
 - name: Install cfssl_extra_packages
-  pkgng:
+  ansible.builtin.pkgng:
     name: "{{ cfssl_extra_packages }}"
 
 - name: Install cfssl
-  pkgng:
+  ansible.builtin.pkgng:
     name: "{{ cfssl_package }}"
     state: present
 
 - name: Create cfssl_group
-  group:
+  ansible.builtin.group:
     name: "{{ cfssl_group }}"
 
 - name: Create cfssl_user
-  user:
+  ansible.builtin.user:
     name: "{{ cfssl_user }}"
     group: "{{ cfssl_group }}"
 
@@ -29,7 +29,7 @@
     - Restart cfssl
 
 - name: Enable cfssl_service when cfssl_db_type is not empty
-  service:
+  ansible.builtin.service:
     name: "{{ cfssl_service }}"
     enabled: yes
   when:

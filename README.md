@@ -117,6 +117,17 @@ which includes the role multiple times to create intermediate CAs.
 | `__cfssl_db_dir` | `/var/db/cfssl` |
 | `__cfssl_db_sqlite_sql_file_dir` | `/usr/local/share/cfssl/certdb/sqlite/migrations` |
 
+## OpenBSD
+
+| Variable | Default |
+|----------|---------|
+| `__cfssl_user` | `_cfssl` |
+| `__cfssl_group` | `_cfssl` |
+| `__cfssl_package` | `cfssl` |
+| `__cfssl_ca_root_dir` | `/etc/cfssl` |
+| `__cfssl_db_dir` | `/var/db/cfssl` |
+| `__cfssl_db_sqlite_sql_file_dir` | `/usr/local/share/cfssl/certdb/sqlite/migrations` |
+
 # Dependencies
 
 None

@@ -1,11 +1,11 @@
 ---
 
 - name: Install cfssl_extra_packages
-  ansible.builtin.apt:
+  community.general.openbsd_pkg:
     name: "{{ cfssl_extra_packages }}"
 
 - name: Install cfssl
-  ansible.builtin.apt:
+  community.general.openbsd_pkg:
     name: "{{ cfssl_package }}"
     state: present
 

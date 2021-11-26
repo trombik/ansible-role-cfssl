@@ -1,30 +1,44 @@
 require "spec_helper"
 require "serverspec"
 
-package = "cfssl"
+package = case os[:family]
+          when "ubuntu"
+            "golang-cfssl"
+          else
+            "cfssl"
+          end
 ca_root_dir = case os[:family]
               when "freebsd"
                 "/usr/local/etc/cfssl"
               else
                 "/etc/cfssl"
               end
-user    = "cfssl"
-group   = "cfssl"
-default_group = "root"
+user    = case os[:family]
+          when "openbsd"
+            "_cfssl"
+          else
+            "cfssl"
+          end
+group   = case os[:family]
+          when "openbsd"
+            "_cfssl"
+          else
+            "cfssl"
+          end
+default_group = case os[:family]
+                when /bsd/
+                  "wheel"
+                else
+                  "root"
+                end
 extra_packages = []
 public_mode = case os[:family]
-              when "freebsd"
+              when /bsd/
                 644
               else
                 664
               end
 service = "cfssl"
-case os[:family]
-when "ubuntu"
-  package = "golang-cfssl"
-when "freebsd"
-  default_group = "wheel"
-end
 
 ca_config = "#{ca_root_dir}/ca-config.json"
 csr_config = "#{ca_root_dir}/ca-csr.json"
@@ -192,10 +206,11 @@ backends.each do |backend|
   describe command "openssl x509 -in #{certs_dir}/#{backend}.#{domain}.pem -text" do
     its(:exit_status) { should eq 0 }
     its(:stderr) { should eq "" }
-    its(:stdout) { should match(/Issuer: CN = Sensu Test CA/) }
+    # output format of libressl is slightly different from openssl
+    its(:stdout) { should match(/Issuer: CN\s*=\s*Sensu Test CA/) }
     its(:stdout) { should match(/RSA Public-Key: \(2048 bit\)/) }
     its(:stdout) { should match(/Signature Algorithm: sha256WithRSAEncryption/) }
-    its(:stdout) { should match(/Subject: CN = #{Regexp.escape(backend)}\.#{Regexp.escape(domain)}/) }
+    its(:stdout) { should match(/Subject: CN\s*=\s*#{Regexp.escape(backend)}\.#{Regexp.escape(domain)}/) }
     its(:stdout) { should match(/TLS Web Server Authentication/) }
     its(:stdout) { should_not match(/TLS Web Client Authentication/) }
     its(:stdout) { should match(/DNS:localhost, DNS:#{Regexp.escape(backend)}, IP Address:127\.0\.0\.1, IP Address:10\.0\.0\.[123]/) }

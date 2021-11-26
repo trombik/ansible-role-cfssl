@@ -31,6 +31,7 @@
     # root CA
     os_project_ca_dir:
       FreeBSD: /usr/local/etc/cfssl
+      OpenBSD: /etc/cfssl
       Debian: /etc/cfssl
     project_ca_dir: "{{ os_project_ca_dir[ansible_os_family] }}"
     project_root_ca_dir: "{{ project_ca_dir }}/root"
