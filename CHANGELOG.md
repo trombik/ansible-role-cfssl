@@ -1,3 +1,9 @@
+## Release 1.4.1
+
+* 6ebea87 bugfix: support OpenBSD
+* e24c528 ci: verify trust chain
+* 8b79f2e ci: add Ubuntu to intermediate test
+
 ## Release 1.4.0
 
 * 070ec77 doc: document intermediate CAs example
