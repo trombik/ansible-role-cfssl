@@ -7,7 +7,7 @@
 
 - name: Do workaround ansible issues 19084
   # See https://github.com/ansible/ansible/issues/19084
-  set_fact: {"{{ item.key }}": "{{ item.value }}"}
+  ansible.builtin.set_fact: {"{{ item.key }}": "{{ item.value }}"}
   with_dict: "{{ cfssl_vars }}"
   when: cfssl_vars is defined
 
@@ -16,7 +16,7 @@
   include: "install-{{ ansible_os_family }}.yml"
 
 - name: Create cfssl_ca_root_dir directory
-  file:
+  ansible.builtin.file:
     path: "{{ cfssl_ca_root_dir }}"
     mode: 0755
     owner: "{{ cfssl_user }}"
@@ -24,7 +24,7 @@
     state: directory
 
 - name: Create cfssl_certs_dir
-  file:
+  ansible.builtin.file:
     path: "{{ cfssl_certs_dir }}"
     mode: 0755
     owner: "{{ cfssl_user }}"
@@ -32,7 +32,7 @@
     state: directory
 
 - name: Create ca.csr.json
-  template:
+  ansible.builtin.template:
     src: ca.csr.json.j2
     dest: "{{ cfssl_ca_csr_config_file }}"
     mode: "0644"
@@ -52,7 +52,7 @@
     - Restart cfssl
 
 - name: Ensure cfssl group can read CA root private key
-  file:
+  ansible.builtin.file:
     path: "{{ cfssl_ca_secret_key_file }}"
     mode: "0640"
     group: "{{ cfssl_group }}"
@@ -60,7 +60,7 @@
     - Restart cfssl
 
 - name: Create cfssl_ca_config_file
-  template:
+  ansible.builtin.template:
     src: ca-config.json.j2
     dest: "{{ cfssl_ca_config_file }}"
     mode: "0644"
@@ -81,7 +81,7 @@
     - not __stat_cfssl_sqlite_database_file.stat or not __stat_cfssl_sqlite_database_file.stat.exists
 
 - name: Create json file for certs
-  template:
+  ansible.builtin.template:
     src: cert.json.j2
     dest: "{{ cfssl_certs_dir }}/{{ item['name'] }}"
     mode: "0644"
@@ -98,7 +98,7 @@
   become_user: "{{ cfssl_user }}"
 
 - name: Ensure private key is owned by owner
-  file:
+  ansible.builtin.file:
     path: "{{ cfssl_certs_dir }}/{{ item['json']['CN'] | regex_replace(' ', '_') }}-key.pem"
     owner: "{{ item['owner'] | default(cfssl_user) }}"
     group: "{{ cfssl_group }}"
